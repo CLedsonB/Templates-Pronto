@@ -1,6 +1,10 @@
 # Templates-Pronto
 
-Cliue Aqui : [Demostração](https://cledsonb.github.io/Templates-Pronto/)
+## Demostração
 
-coleção de templates de website para demostração. (HTML5, CSS3, JS,)
+### Clique Aqui : [Demostração](https://cledsonb.github.io/Templates-Pronto/)
+
+## Objetivo
+
+Coleção de templates de website para demostração. (HTML5, CSS3, JS,)
 
