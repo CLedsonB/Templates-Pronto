@@ -1,0 +1,1 @@
+!function(i){"use strict";function o(){for(var i in google)this.api=i}o.active=!0,i.component("GoogleApi",o)}((jQuery,Marisa));

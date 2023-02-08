@@ -1,0 +1,1 @@
+!function(n,e){"use strict";n.component("csrftoken",{active:!0,name:"CsrfToken",init:function(){e(document).ready(function(){e.get("/csrf-token",function(n){ACC.config.CSRFToken=n,e('input[name="CSRFToken"]').each(function(n,o){e(o).val()!==ACC.config.CSRFToken&&e(o).val(ACC.config.CSRFToken)})})})}})}(Marisa,jQuery);

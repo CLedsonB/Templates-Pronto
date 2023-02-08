@@ -1,0 +1,1 @@
+var log=function(){arguments[0]=logPrefix+arguments[0],Marisa.debug},logWarn=function(){arguments[0]=logPrefix+arguments[0],Marisa.debug},logError=function(){arguments[0]=logPrefix+arguments[0],Marisa.debug};

@@ -1,0 +1,485 @@
+(function () {
+  console.log("GTM Flip");
+  try {
+    var URL_IOMS = "https://api.flip.net.br/oms";
+
+    if (!url) url = window.location.href;
+
+    var name = "socia".replace(/[\[\]]/g, "\\$&");
+
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+      results = regex.exec(url);
+
+    const exitStore = "socia=sair-da-loja";
+
+    if (
+      results &&
+      (results[0] == "?socia=sair-da-loja" ||
+        results[0] == "&socia=sair-da-loja")
+    ) {
+      /** Limpar sessão da influ */
+      console.log("Sessão expirada");
+      socia_id = null;
+      localStorage.removeItem("socia_id");
+      localStorage.removeItem("socia_set_at");
+      document.cookie = "count_socia=; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+      currentURL = window.location.href;
+      /** Redirecionar para a página corrente */
+      currentURL = currentURL.replace(results[0], "");
+      window.location.href = currentURL;
+    } else {
+      if (results && results[2]) {
+        var socia_id = decodeURIComponent(results[2].replace(/\+/g, " "));
+
+        localStorage.setItem("socia_id", socia_id);
+        var today = new Date();
+        today = today.toString();
+        localStorage.setItem("socia_set_at", today);
+      } else {
+        var socia_id = null;
+      }
+
+      if (socia_id !== null) {
+        document.cookie =
+          "count_socia=; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+      }
+
+      if (socia_id == null) {
+        if (localStorage.getItem("socia_id")) {
+          var date_set = localStorage.getItem("socia_set_at");
+
+          if (date_set == null) {
+            var today = new Date();
+            today = today.toString();
+            localStorage.setItem("socia_set_at", today);
+          }
+
+          var now = new Date();
+          var past = new Date(date_set);
+          var diff = Math.abs(now.getTime() - past.getTime());
+          //var days = Math.round(((diff % 86400000) % 3600000) / 60000); // minutes
+
+          var days = Math.ceil(diff / (1000 * 60 * 60));
+
+          console.log(days);
+
+          console.log("Gt24Hours", now, past, diff, days > 72);
+
+          var data_days_cookie = days;
+
+          if (data_days_cookie > 72) {
+            console.log("SessÃƒÂ£o expirada: ");
+            socia_id = null;
+            localStorage.removeItem("socia_id");
+            localStorage.removeItem("socia_set_at");
+          } else {
+            console.log("SessÃƒÂ£o ainda ativa");
+            socia_id = localStorage.getItem("socia_id");
+          }
+        }
+      }
+
+      var socia_id = socia_id;
+
+      if (socia_id) {
+        if (window.location.href.indexOf("socia=") == -1) {
+          if (window.location.href.indexOf("?") > -1) {
+            var url = document.location.href + "&socia=" + socia_id;
+          } else {
+            var url = document.location.href + "?socia=" + socia_id;
+          }
+
+          var title = document.title;
+          history.replaceState({}, title, url);
+        }
+
+        if (localStorage.getItem("socia_set_at") !== null) {
+          date_set = localStorage.getItem("socia_set_at");
+          console.log("entrou socia_set_at" + date_set);
+
+          var now = new Date();
+          var past = new Date(date_set);
+          var diff = Math.abs(now.getTime() - past.getTime());
+          var mins = diff / (1000 * 60);
+          console.log("GtMin", now, past, diff, mins, 15, mins > 15);
+          var minCookie_check = mins;
+
+          if (minCookie_check > 15) {
+            document.cookie =
+              "count_socia=; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+          }
+        }
+
+        var newAdditionalURL = "";
+        var tempArray = window.location.href.split("?");
+        var baseURL = tempArray[0];
+        var additionalURL = tempArray[1];
+        var temp = "";
+
+        if (additionalURL) {
+          tempArray = additionalURL.split("&");
+
+          for (var i = 0; i < tempArray.length; i++) {
+            if (tempArray[i].split("=")[0] !== "socia") {
+              newAdditionalURL += temp + tempArray[i];
+              temp = "&";
+            }
+          }
+        }
+
+        var match = document.cookie.match(
+          new RegExp("(^| )count_socia=([^;]+)")
+        );
+
+        if (match) {
+          var cookieCheck = decodeURIComponent(match[2]);
+        } else {
+          var cookieCheck = "not found";
+        }
+
+        if (cookieCheck === "not found") {
+          console.log("computou cookie");
+
+          var expires = 0;
+          document.cookie =
+            "count_socia" + "=" + (1 || "") + expires + "; path=/";
+
+          var URL_UPDATECOUNT =
+            "/v1/visitors/create?router_name=Ecommerce&url=" +
+            encodeURIComponent(window.location.href) +
+            "&slug=" +
+            socia_id;
+          var xhr = new XMLHttpRequest();
+          var url = URL_IOMS + URL_UPDATECOUNT;
+          xhr.open("GET", url, true);
+          xhr.setRequestHeader("Accept", "application/json");
+          xhr.setRequestHeader("Content-Type", "application/json");
+
+          xhr.addEventListener("readystatechange", function () {
+            if (this.readyState === this.DONE) {
+              console.log(this.responseText);
+            }
+          });
+
+          xhr.send();
+        }
+
+        // Visual Marisa
+
+        var url =
+          "https://go.flip.net.br/api/v2/parceiro/ecomm/customization/marisa/";
+
+        const settings = {
+          async: true,
+          crossDomain: true,
+          url: url + socia_id,
+          method: "GET",
+        };
+
+        $.ajax(settings).done(function (response) {
+          $('<style id="flipcss"></style>').insertAfter("header.main-header");
+
+          var request = $.ajax({
+            url: "https://flipnet-assets.s3.sa-east-1.amazonaws.com/admin/public/ecommerce/customized/marisa/script-flipcode.css",
+          });
+
+          request.done(function (msg) {
+            $("style#flipcss").html(msg);
+          });
+
+          request.fail(function (jqXHR, textStatus) {
+            console.log("Request failed: " + textStatus);
+          });
+
+          $('<div id="flip-partner-card"></div>').insertAfter(
+            "header.main-header"
+          );
+
+          // Criar Link
+          var partner_photo = response.ecomm_customization.partner_photo;
+          var highlight_text = response.ecomm_customization.highlight_text;
+          var highlight_desc =
+            response.ecomm_customization.highlight_description;
+
+          console.log(highlight_desc);
+
+          $("#flip-partner-card").append(
+            '<a href="javascript:void(0)" id="open-partner-card" class="open-partner-card"><img src="' +
+              partner_photo +
+              '" alt="' +
+              highlight_text +
+              '" /></a>'
+          );
+
+          // Criar modal
+          var friendly_name =
+            response.ecomm_customization.partner.friendly_name;
+
+          /** Pegar apenas o primeiro nome */
+          function getFriendlyName(name) {
+            var friendly_name_array = name.trim().split(" ");
+
+            if (friendly_name_array.length >= 1) {
+              return friendly_name_array.shift();
+            }
+          }
+
+          /** Adicionar texto para acompanhar nome */
+          friendly_name_title = `Loja do(a) ${getFriendlyName(friendly_name)}`;
+
+          $("#flip-partner-card").append(
+            '<div id="modal-partner-card" class="modal-partner-card modal-partner-card-hidden">' +
+              '<a href="javascript:void(0)" class="modal-close-flip"><svg xmlns="http://www.w3.org/2000/svg" width="36.03" height="36.03" viewBox="0 0 36.03 36.03"><defs><style>.a{fill:none;stroke:#FF0099;stroke-width:6px;}</style></defs><g transform="translate(-1833.516 -309.818)"><path style="stroke:#FF0099" class="a" d="M4115.425,291.939l-31.788,31.788" transform="translate(-2248 20)"/><path style="stroke:#FF0099" class="a" d="M4115.425,291.939l-31.788,31.788" transform="translate(2159.364 -3771.699) rotate(90)"/></g></svg></a>' +
+              '<div class="col-1-modal-partner">' +
+              '<div class="modal-photo-partner-card"><img src="' +
+              partner_photo +
+              '" alt="' +
+              friendly_name +
+              '" /></div>' +
+              '<div class="modal-header-partner-card">' +
+              "<h6>" +
+              friendly_name_title +
+              "</h6>" +
+              '<div id="social-partner-card"></div>' +
+              "</div>" +
+              "<h5>" +
+              highlight_text +
+              "</h5>" +
+              "<p>" +
+              highlight_desc +
+              "</p>" +
+              '<div id="mobile-social-partner-card" style="display:none"></div>' +
+              '<div id="social-product-card"></div>' +
+              "</div>" +
+              '<div class="col-2-modal-partner">' +
+              '<div id="photos-partner-card"></div>' +
+              "</div>" +
+              '<a href="javascript:void(0)" class="mobile-modal-close-flip"><svg xmlns="http://www.w3.org/2000/svg" width="34.713" height="20.185" viewBox="0 0 34.713 20.185"><defs><style>.a{fill:none;stroke:#fff;stroke-width:4px;}</style></defs><path class="a" d="M4846.74,600.05l15.942-15.942,15.942,15.942" transform="translate(-4845.326 -581.279)"/></svg></a>' +
+              '<img  src="https://flipnet-assets.s3.sa-east-1.amazonaws.com/admin/public/ecommerce/customized/marisa/logo-marisa.svg" class="img-logo-ecomm-flip" alt="marisa"/>' +
+              "</div>"
+          );
+
+          // Carregar Redes Sociais
+          var social_networks = response.ecomm_customization.social_networks;
+
+          for (i = 0; i < social_networks.length; i++) {
+            if (social_networks[i].social_network.indexOf("lp/marisa/") == -1) {
+              $("#social-partner-card").append(
+                '<a href="' +
+                  social_networks[i].social_network +
+                  '" target="_blank"><img src="' +
+                  social_networks[i].png_white +
+                  '" alt="' +
+                  social_networks[i].content +
+                  '" /></a>'
+              );
+              $("#mobile-social-partner-card").append(
+                '<a href="' +
+                  social_networks[i].social_network +
+                  '" target="_blank"><img src="' +
+                  social_networks[i].png_white +
+                  '" alt="' +
+                  social_networks[i].content +
+                  '" /></a>'
+              );
+            } else {
+              $("#social-product-card").append(
+                '<a href="' +
+                  social_networks[i].social_network +
+                  '" target="_blank">MEUS PRODUTOS FAVORITOS</a>' +
+                  '<a href="' +
+                  window.location.href.replace(
+                    "socia=" + socia_id,
+                    exitStore
+                  ) +
+                  '" >SAIR DA LOJA</a>'
+              );
+            }
+          }
+
+          // Carregar Imagens
+          var photos = response.ecomm_customization.photos;
+
+          for (i = 0; i < photos.length; i++) {
+            $("#photos-partner-card").append(
+              '<img src="' + photos[i].url + '" alt="' + friendly_name + '" />'
+            );
+          }
+
+          $slick_slider = $("#photos-partner-card");
+          settings_slider = {
+            dots: false,
+            arrows: false,
+            speed: 300,
+            slidesToShow: 2,
+            centerMode: true,
+            centerPadding: "60px",
+            autoplay: true,
+            autoplaySpeed: 4000,
+          };
+
+          slick_on_mobile($slick_slider, settings_slider);
+
+          function slick_on_mobile(slider, settings) {
+            if ($(window).width() > 767) {
+              if (slider.hasClass("slick-initialized")) {
+                slider.slick("unslick");
+              }
+              return;
+            }
+            if (!slider.hasClass("slick-initialized")) {
+              console.log("mobile");
+              $(".col-2-modal-partner").insertBefore(".col-1-modal-partner");
+
+              return slider.slick(settings);
+            }
+          }
+
+          $(".modal-close-flip").on("click", function () {
+            $("#modal-partner-card").toggleClass("modal-partner-card-hidden");
+          });
+
+          $(".mobile-modal-close-flip").on("click", function () {
+            $("#modal-partner-card").toggleClass("modal-partner-card-hidden");
+          });
+
+          $("#open-partner-card").on("click", function () {
+            $("#modal-partner-card").toggleClass("modal-partner-card-hidden");
+          });
+        });
+      }
+
+      if (socia_id !== null) {
+        setTimeout(function () {
+          var url = window.location.pathname;
+          var url_order = url.indexOf("orderConfirmation") !== -1;
+
+          if (url_order) {
+            var URL_CREATE_ORDER = "/v1/order/createOrderSapHybris";
+            var xhr = new XMLHttpRequest();
+
+            var orderBody = {};
+
+            var dlvOrder = dataLayer.find(function (e) {
+              return e && typeof e === "object" && !!e.transactionProducts;
+            });
+
+            var actionField = {};
+
+            var revenue = dlvOrder.transactionTotal;
+            revenue = revenue.replace("R$ ", "");
+            revenue = revenue.replace(".", "");
+            revenue = revenue.replace(",", ".");
+            revenue = parseFloat(revenue);
+
+            var tax = document.getElementsByClassName("orderTax")[0].value;
+            tax = tax.replace("R$ ", "");
+            tax = tax.replace(".", "");
+            tax = tax.replace(",", ".");
+            tax = parseFloat(tax);
+
+            var shipping = dlvOrder.transactionShipping;
+            shipping = shipping.replace("R$ ", "");
+            shipping = shipping.replace(".", "");
+            shipping = shipping.replace(",", ".");
+            shipping = parseFloat(shipping);
+
+            actionField["id"] = dlvOrder.transactionID;
+            actionField["affiliation"] =
+              document.getElementsByClassName("affiliation")[0].value;
+            actionField["revenue"] = revenue;
+            actionField["tax"] = tax;
+            actionField["shipping"] = shipping;
+            actionField["coupon"] = null;
+
+            var products_order = dlvOrder.transactionProducts.map(function (
+              item
+            ) {
+              var price = item.price;
+              price = price.replace("R$ ", "");
+              price = price.replace(".", "");
+              price = price.replace(",", ".");
+              price = parseFloat(price);
+
+              return {
+                brand: item.brand,
+                color: item.color,
+                id: item.id,
+                name: item.name,
+                originalPrice: item.originalPrice,
+                position: item.position,
+                quantity: item.quantity,
+                size: item.size,
+                sku: item.sku,
+                price: price,
+              };
+            });
+
+            var tagCustomerVisitor = dataLayer.find(function (e) {
+              return e && typeof e === "object" && !!e.visitor;
+            });
+            var tagCustomerFirstName = tagCustomerVisitor.visitor.name;
+
+            if (tagCustomerFirstName) {
+              var tagCustomerFirstName_cookie = tagCustomerFirstName;
+              var tagCustomerFirstName_cookie =
+                tagCustomerFirstName_cookie.split(" ");
+              var tagCustomerFirstName_cookie = tagCustomerFirstName_cookie[0];
+            } else {
+              var tagCustomerFirstName_cookie = "not found";
+            }
+
+            var tagCustomerLastName = tagCustomerVisitor.visitor.name;
+
+            if (tagCustomerLastName) {
+              var tagCustomerLastName_cookie = tagCustomerLastName;
+              var tagCustomerLastName_cookie =
+                tagCustomerLastName_cookie.split(" ");
+              var tagCustomerLastName_cookie = tagCustomerLastName_cookie[1];
+            } else {
+              var tagCustomerLastName_cookie = "not found";
+            }
+
+            var tagCustomerEmail = tagCustomerVisitor.visitor.email;
+
+            if (tagCustomerEmail) {
+              var tagCustomerEmail_cookie = tagCustomerEmail;
+            } else {
+              var tagCustomerEmail_cookie = "not found";
+            }
+
+            orderBody["key"] = "MAR";
+            orderBody["partner_parent_external_id"] = "10755";
+            orderBody["name"] = tagCustomerFirstName_cookie;
+            orderBody["sobrenome"] = tagCustomerLastName_cookie;
+            orderBody["email"] = tagCustomerEmail_cookie;
+            orderBody["order"] = {
+              purchase: {
+                actionField: actionField,
+                products: products_order,
+              },
+            };
+            orderBody["partner"] = socia_id;
+            var orderBody = orderBody;
+
+            var url = URL_IOMS + URL_CREATE_ORDER;
+            xhr.open("POST", url, true);
+
+            xhr.addEventListener("readystatechange", function () {
+              if (this.readyState === this.DONE) {
+                console.log(this.responseText);
+              }
+            });
+
+            xhr.setRequestHeader("Accept", "application/json");
+            xhr.setRequestHeader("Content-Type", "application/json");
+
+            xhr.send(JSON.stringify(orderBody));
+          }
+        }, 4000);
+      }
+    }
+  } catch (e) {
+    console.log(e);
+  }
+})();

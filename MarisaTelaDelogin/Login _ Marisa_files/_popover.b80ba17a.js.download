@@ -1,0 +1,1 @@
+!function(o,t){"use strict";o.component("popover",{active:!0,init:function(){t(document).ready(function(){t('[data-toggle="popover"]').popover()})}})}(Marisa,jQuery);

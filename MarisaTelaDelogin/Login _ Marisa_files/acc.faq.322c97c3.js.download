@@ -1,0 +1,1 @@
+ACC.faq={_autoload:[["openModalFaq",0<$(".email-faq-modal").length]],openModalFaq:function(){$(".email-faq-modal").click(function(){$("#modal--faq-send-email").modal()})}};

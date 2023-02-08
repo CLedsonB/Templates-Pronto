@@ -1,0 +1,1 @@
+!function(i){"use strict";i.component("rating",{active:!0,init:function(){this.loadReviews()},loadReviews:function(){}})}(Marisa,jQuery);
