@@ -2,7 +2,7 @@
 
 ## Demostração
 
-### [Clique Aqui](https://cledsonb.github.io/Templates-Pronto/)
+### [Clique Aqui](https://cledsonb.github.io/TemplatesPronto/)
 
 ## Objetivo
 
