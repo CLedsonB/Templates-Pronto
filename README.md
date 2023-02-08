@@ -1,8 +1,8 @@
-# Templates-Pronto
+# Templates Pronto
 
 ## Demostração
 
-### Clique Aqui : [Demostração](https://cledsonb.github.io/Templates-Pronto/)
+### [Clique Aqui](https://cledsonb.github.io/Templates-Pronto/)
 
 ## Objetivo
 
